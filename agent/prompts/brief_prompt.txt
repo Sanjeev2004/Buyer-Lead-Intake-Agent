@@ -1,0 +1,89 @@
+You are writing a Lead Brief for a licensed real estate agent (realtor). This brief is the document the realtor reads before calling or emailing the buyer. It must be clear, concise, and actionable — the realtor may be reading it on their phone between appointments.
+
+Write the Lead Brief in rich Markdown format following the structure below EXACTLY. Use real data — do not invent properties or facts not in the data provided.
+
+---
+
+# Lead Brief — {buyer_name} ({lead_id})
+
+**Received**: {received_at} | **Channel**: {channel} | **Priority**: {priority_emoji} {priority_label}
+
+---
+
+## 👤 Buyer Snapshot
+
+| Field | Detail |
+|---|---|
+| **Name** | {buyer_name} |
+| **Email** | {buyer_email} |
+| **Phone** | {buyer_phone} |
+| **Buyer Type** | {buyer_type} |
+| **Intent** | {buyer_intent} |
+| **Cash Buyer** | {is_cash_buyer} |
+| **Timeline** | {timeline} |
+| **Urgency** | {urgency} |
+
+---
+
+## 🏠 What They're Looking For
+
+Write 2-4 sentences summarizing what the buyer wants in plain English. Be specific. Use the buyer_profile data.
+
+---
+
+## ⚠️ Realtor Alerts
+
+List each anomaly flag on its own line with an appropriate emoji. If no flags, write "None — clean lead."
+
+---
+
+## 🏆 Top Property Matches
+
+For each ranked match, write a section like this:
+
+### {rank}. {address} — ${price:,} | {bedrooms}BR / {bathrooms}BA | {sqft:,} sqft | {neighborhood}
+
+**Match Score**: {score}/10 | **Type**: {property_type} | **Days on Market**: {days_on_market} | **MLS#**: {mls_number}
+
+**Why it fits**: {match_summary}
+
+**Strengths**: {strengths as bullet list}
+
+**Watch out**: {concerns as bullet list, or "None identified"}
+
+{negotiation_note if present}
+
+---
+
+## 💡 Suggested Next Action
+
+Write 2-3 specific, actionable sentences telling the realtor exactly what to do next. Be concrete — name specific properties, mention the timeline, suggest what to say on the first call.
+
+---
+
+Now generate the Lead Brief using the following data:
+
+Lead ID: {lead_id}
+Received: {received_at}
+Channel: {channel}
+Buyer Name: {buyer_name}
+Buyer Email: {buyer_email}
+Buyer Phone: {buyer_phone}
+
+Buyer Profile:
+{buyer_profile}
+
+Anomaly Flags:
+{anomaly_flags}
+
+Ranked Property Matches:
+{ranked_matches}
+
+Priority: Determine priority based on urgency, budget, cash buyer status, and completeness of the lead. Use 🔴 High, 🟡 Medium, or 🟢 Low.
+
+Important rules:
+- NEVER expose or mention owner_name or owner_phone from the MLS data. Those are internal fields.
+- If anomaly flags exist, address them clearly in the Realtor Alerts section.
+- If the lead is vague (LEAD-004 style), the "Top Property Matches" section should instead be titled "📋 Clarifying Questions for First Call" and list 5-7 questions the realtor should ask.
+- If this is a negotiation-focused lead (buyer asking about offer strategy), add a "🤝 Negotiation Context" section after the matches.
+- Write in a professional but warm tone — like a smart colleague briefing you.
