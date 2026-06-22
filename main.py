@@ -7,15 +7,17 @@ Usage:
 
 Reads all leads from data/sample_buyer_inquiries.json,
 runs each through the LangGraph pipeline,
-and writes Markdown Lead Briefs to output/brief_LEAD-2026-XXX.md
+and writes styled PDF Lead Briefs to output/brief_LEAD-2026-XXX.pdf
 
-Also writes output/summary_index.md — a triage table for all 12 leads.
+Also writes output/summary_index.pdf — a triage table for all 12 leads.
 """
 import json
 import os
 import sys
 import time
 from pathlib import Path
+
+from agent.pdf_utils import markdown_to_pdf
 
 import io
 from dotenv import load_dotenv
@@ -61,16 +63,18 @@ def run_pipeline(lead: dict, graph) -> str:
 
 
 def write_brief(lead_id: str, brief_md: str) -> Path:
-    """Writes a Lead Brief to the output directory."""
+    """Converts Markdown Lead Brief to a styled PDF in the output directory."""
     OUTPUT_DIR.mkdir(exist_ok=True)
-    filename = OUTPUT_DIR / f"brief_{lead_id}.md"
-    filename.write_text(brief_md, encoding="utf-8")
+    filename = OUTPUT_DIR / f"brief_{lead_id}.pdf"
+    markdown_to_pdf(brief_md, filename)
     return filename
 
 
 def write_summary_index(results: list[dict]) -> Path:
-    """Writes a summary triage table of all leads."""
+    """Writes a styled PDF summary triage table of all leads."""
     OUTPUT_DIR.mkdir(exist_ok=True)
+
+    # Build Markdown — links point to .pdf brief files
     lines = [
         "# Lead Briefs — Summary Index",
         "",
@@ -84,9 +88,9 @@ def write_summary_index(results: list[dict]) -> Path:
         lead = r["lead"]
         flags = r["flags"]
         status = r["status"]
-        flag_str = " ".join(flags[:2]) if flags else "✅ Clean"
+        flag_str = " ".join(flags[:2]) if flags else "Clean"
         lines.append(
-            f"| [{lead['lead_id']}](brief_{lead['lead_id']}.md) "
+            f"| {lead['lead_id']} "
             f"| {lead['buyer_name']} "
             f"| {lead['channel'].replace('_', ' ').title()} "
             f"| {flag_str[:60]} "
@@ -98,14 +102,15 @@ def write_summary_index(results: list[dict]) -> Path:
         "---",
         "",
         "## Flag Legend",
-        "- 🔒 Security alert (prompt injection)",
-        "- ⚠️ Anomaly (impossible budget, anonymous, vague)",
-        "- 🤝 Negotiation advisory",
-        "- ✅ Clean lead",
+        "- Security alert (prompt injection)",
+        "- Anomaly (impossible budget, anonymous, vague)",
+        "- Negotiation advisory",
+        "- Clean lead",
     ]
 
-    summary_path = OUTPUT_DIR / "summary_index.md"
-    summary_path.write_text("\n".join(lines), encoding="utf-8")
+    summary_md = "\n".join(lines)
+    summary_path = OUTPUT_DIR / "summary_index.pdf"
+    markdown_to_pdf(summary_md, summary_path)
     return summary_path
 
 
@@ -143,7 +148,7 @@ def main():
                 flags.append("🤝")
 
             output_path = write_brief(lead_id, brief_md)
-            print(f"✅ Done ({elapsed:.1f}s) → {output_path.name}")
+            print(f"✅ Done ({elapsed:.1f}s) → {output_path.name} (PDF)")
 
             results.append({
                 "lead": lead,
@@ -167,7 +172,7 @@ def main():
 
     print()
     summary_path = write_summary_index(results)
-    print(f"📄 Summary index written → {summary_path}")
+    print(f"📄 Summary index written → {summary_path.name} (PDF)")
     print()
 
     success_count = sum(1 for r in results if "✅" in r["status"])
