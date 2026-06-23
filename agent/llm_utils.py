@@ -52,15 +52,24 @@ def _build_openrouter_llm(temperature: float):
     """
     OpenRouter via langchain_openai — OpenAI-compatible endpoint.
     Supports every model on https://openrouter.ai/models via one API key.
+
+    To pin to a specific backend, set OPENROUTER_PROVIDER_SUFFIX in .env:
+      cerebras  → Cerebras wafer-scale (~2000 tok/s, ultra-fast)
+      groq      → Groq backend
+      free      → free tier (any provider)
+    e.g. OPENROUTER_PROVIDER_SUFFIX=cerebras
     """
     from langchain_openai import ChatOpenAI
+
+    suffix = os.environ.get("OPENROUTER_PROVIDER_SUFFIX", "").strip()
+    model_id = f"{MODEL}:{suffix}" if suffix else MODEL
+
     return ChatOpenAI(
-        model=MODEL,
+        model=model_id,
         temperature=temperature,
         api_key=os.environ["OPENROUTER_API_KEY"],
         base_url="https://openrouter.ai/api/v1",
         default_headers={
-            # OpenRouter recommends these for attribution / rate-limit tiers
             "HTTP-Referer": "https://github.com/Sanjeev2004/Buyer-Lead-Intake-Agent",
             "X-Title": "Buyer Lead Intake Agent",
         },
