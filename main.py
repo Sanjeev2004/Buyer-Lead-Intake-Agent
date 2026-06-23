@@ -29,11 +29,21 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
 # Load environment variables from .env file
 load_dotenv()
 
-# Validate Groq API key
-if not os.environ.get("GROQ_API_KEY"):
-    print("❌ ERROR: GROQ_API_KEY is not set.")
-    print("   Copy .env.example to .env and add your Groq API key.")
-    print("   Get a free key at: https://console.groq.com")
+# Validate API key for the chosen provider
+_PROVIDER = os.environ.get("LLM_PROVIDER", "groq").lower().strip()
+_KEY_MAP = {
+    "groq":       ("GROQ_API_KEY",       "https://console.groq.com"),
+    "openrouter": ("OPENROUTER_API_KEY", "https://openrouter.ai/keys"),
+    "openai":     ("OPENAI_API_KEY",     "https://platform.openai.com/api-keys"),
+}
+if _PROVIDER not in _KEY_MAP:
+    print(f"❌ ERROR: Unknown LLM_PROVIDER='{_PROVIDER}'. Valid: groq, openrouter, openai")
+    sys.exit(1)
+_key_name, _key_url = _KEY_MAP[_PROVIDER]
+if not os.environ.get(_key_name):
+    print(f"❌ ERROR: {_key_name} is not set (required for LLM_PROVIDER={_PROVIDER}).")
+    print(f"   Copy .env.example to .env and add your key.")
+    print(f"   Get a key at: {_key_url}")
     sys.exit(1)
 
 from agent.graph import build_graph
@@ -115,9 +125,11 @@ def write_summary_index(results: list[dict]) -> Path:
 
 
 def main():
+    from agent.llm_utils import PROVIDER, MODEL
     print("=" * 60)
     print("  Buyer Lead Intake Agent — AgentMira Case Study")
-    print("  Model: llama-3.3-70b-versatile via Groq")
+    print(f"  Provider : {PROVIDER}")
+    print(f"  Model    : {MODEL}")
     print("=" * 60)
     print()
 
